@@ -63,7 +63,6 @@ public class AnalyticsHelper {
         if (BuildConfig.DEBUG) return;
         if ("play".equals(BuildConfig.BUILD_TYPE)) {
             AppCenter.start(application, Extra.APPCENTER_SECRET, Analytics.class);
-            patchDevice();
         } else {
             preferences = application.getSharedPreferences("nekoanalytics", Application.MODE_PRIVATE);
             analyticsDisabled = preferences.getBoolean("analyticsDisabled", false);
@@ -71,7 +70,6 @@ public class AnalyticsHelper {
                 return;
             }
             AppCenter.start(application, Extra.APPCENTER_SECRET, Analytics.class, Crashes.class);
-            patchDevice();
             sendBugReport = preferences.getBoolean("sendBugReport", true);
             Crashes.setEnabled(sendBugReport);
         }
