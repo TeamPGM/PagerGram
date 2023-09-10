@@ -64,6 +64,7 @@ import java.util.HashSet;
 import java.util.Locale;
 
 import tw.nekomimi.nekogram.helpers.MessageHelper;
+import tw.nekomimi.nekogram.helpers.UserHelper;
 import tw.nekomimi.nekogram.settings.BaseNekoSettingsActivity;
 
 @SuppressLint({"RtlHardcoded", "NotifyDataSetChanged"})
@@ -419,7 +420,7 @@ public class MessageDetailsActivity extends BaseNekoSettingsActivity implements 
                 if (user != null) {
                     appendUserOrChat(user, builder);
                 } else {
-                    getMessageHelper().searchUser(emojiSetOwner, user1 -> {
+                    getUserHelper().searchUser(emojiSetOwner, user1 -> {
                         StringBuilder builder1 = new StringBuilder();
                         if (user1 != null) {
                             appendUserOrChat(user1, builder1);
@@ -594,7 +595,7 @@ public class MessageDetailsActivity extends BaseNekoSettingsActivity implements 
                     } else if (position == fileMimeTypeRow) {
                         textCell.setTextAndValue("Mime type", messageObject.getMimeType(), divider);
                     } else if (position == dcRow) {
-                        textCell.setTextAndValue("DC", MessageHelper.formatDCString(dc), divider);
+                        textCell.setTextAndValue("DC", UserHelper.formatDCString(dc), divider);
                     } else if (position == restrictionReasonRow) {
                         ArrayList<TLRPC.TL_restrictionReason> reasons = messageObject.messageOwner.restriction_reason;
                         StringBuilder value = new StringBuilder();
@@ -627,7 +628,7 @@ public class MessageDetailsActivity extends BaseNekoSettingsActivity implements 
                         if (user != null) {
                             appendUserOrChat(user, builder);
                         } else {
-                            getMessageHelper().searchUser(stickerSetOwner, user1 -> {
+                            getUserHelper().searchUser(stickerSetOwner, user1 -> {
                                 StringBuilder builder1 = new StringBuilder();
                                 if (user1 != null) {
                                     appendUserOrChat(user1, builder1);
@@ -715,9 +716,10 @@ public class MessageDetailsActivity extends BaseNekoSettingsActivity implements 
             TLRPC.User user = (TLRPC.User) object;
             builder.append(ContactsController.formatName(user.first_name, user.last_name));
             builder.append("\n");
-            if (!TextUtils.isEmpty(user.username)) {
+            var username = UserObject.getPublicUsername(user);
+            if (!TextUtils.isEmpty(username)) {
                 builder.append("@");
-                builder.append(UserObject.getPublicUsername(user));
+                builder.append(username);
                 builder.append("\n");
             }
             builder.append(user.id);
@@ -725,9 +727,10 @@ public class MessageDetailsActivity extends BaseNekoSettingsActivity implements 
             TLRPC.Chat chat = (TLRPC.Chat) object;
             builder.append(chat.title);
             builder.append("\n");
-            if (!TextUtils.isEmpty(chat.username)) {
+            var username = ChatObject.getPublicUsername(chat);
+            if (!TextUtils.isEmpty(username)) {
                 builder.append("@");
-                builder.append(ChatObject.getPublicUsername(chat));
+                builder.append(username);
                 builder.append("\n");
             }
             builder.append(chat.id);

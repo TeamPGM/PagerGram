@@ -18,6 +18,7 @@ import android.util.Pair;
 import android.util.SparseArray;
 
 import androidx.collection.LongSparseArray;
+import androidx.core.content.ContextCompat;
 
 import org.telegram.SQLite.SQLiteCursor;
 import org.telegram.SQLite.SQLitePreparedStatement;
@@ -94,7 +95,7 @@ public class DownloadController extends BaseController implements NotificationCe
         public int maxVideoBitrate;
 
         public Preset(int[] m, long p, long v, long f, boolean pv, boolean pm, boolean e, boolean l, int bitrate, boolean preloadStories) {
-            System.arraycopy(m, 0, mask, 0, mask.length);
+            System.arraycopy(m, 0, mask, 0, Math.max(m.length, mask.length));
             sizes[PRESET_SIZE_NUM_PHOTO] = p;
             sizes[PRESET_SIZE_NUM_VIDEO] = v;
             sizes[PRESET_SIZE_NUM_DOCUMENT] = f;
@@ -336,7 +337,7 @@ public class DownloadController extends BaseController implements NotificationCe
             }
         };
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        ApplicationLoader.applicationContext.registerReceiver(networkStateReceiver, filter);
+        ContextCompat.registerReceiver(ApplicationLoader.applicationContext, networkStateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
 
         if (getUserConfig().isClientActivated()) {
             checkAutodownloadSettings();

@@ -60,6 +60,7 @@ import org.telegram.ui.Stories.StoryViewer;
 import java.util.ArrayList;
 
 import tw.nekomimi.nekogram.helpers.MessageHelper;
+import tw.nekomimi.nekogram.helpers.UserHelper;
 
 public abstract class BaseFragment {
 
@@ -785,6 +786,10 @@ public abstract class BaseFragment {
         return MessageHelper.getInstance(currentAccount);
     }
 
+    public UserHelper getUserHelper() {
+        return UserHelper.getInstance(currentAccount);
+    }
+
     public void setFragmentPanTranslationOffset(int offset) {
         if (parentLayout != null) {
             parentLayout.setFragmentPanTranslationOffset(offset, this);
@@ -957,6 +962,9 @@ public abstract class BaseFragment {
     }
 
     public boolean isLightStatusBar() {
+        if (storyViewer != null && storyViewer.isShown()) {
+            return false;
+        }
         if (hasForceLightStatusBar() && !Theme.getActiveTheme().isDark()) {
             return true;
         }

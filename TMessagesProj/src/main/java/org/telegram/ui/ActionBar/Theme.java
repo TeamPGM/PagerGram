@@ -1074,7 +1074,7 @@ public class Theme {
                 for (int a = 0, N = accents.size(); a < N; a++) {
                     ThemeAccent accent = accents.get(a);
                     File wallpaper = accent.getPathToWallpaper();
-                    if (wallpaper != null && wallpaper.exists()) {
+                    if (wallpaper != null && wallpaper.length() > 0) {
                         accents.remove(a);
                         a--;
                         N--;
@@ -1266,7 +1266,9 @@ public class Theme {
                     dst.compress(Bitmap.CompressFormat.JPEG, 87, stream);
                 } else {
                     FileOutputStream stream = new FileOutputStream(toFile);
-                    patternBitmap.compress(Bitmap.CompressFormat.PNG, 87, stream);
+                    Bitmap bitmap = patternBitmap.copy(Bitmap.Config.ARGB_8888, true);
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 87, stream);
+                    bitmap.recycle();
                     stream.close();
                 }
             } catch (Throwable e) {
@@ -3209,7 +3211,6 @@ public class Theme {
     public static Drawable chat_inlineResultFile;
     public static Drawable chat_inlineResultAudio;
     public static Drawable chat_inlineResultLocation;
-    public static Drawable chat_redLocationIcon;
     public static Drawable chat_msgOutLocationDrawable;
     public static Drawable chat_contextResult_shadowUnderSwitchDrawable;
     public static Drawable chat_shareIconDrawable;
@@ -3241,7 +3242,6 @@ public class Theme {
     public static Drawable chat_msgCallDownRedDrawable;
     public static Drawable chat_msgCallDownGreenDrawable;
 
-    public static Drawable chat_msgAvatarLiveLocationDrawable;
     public static Drawable chat_attachEmptyDrawable;
     public static RLottieDrawable[] chat_attachButtonDrawables = new RLottieDrawable[6];
     public static Drawable[] chat_locationDrawable = new Drawable[2];
@@ -4064,6 +4064,13 @@ public class Theme {
     public static final int key_topics_unreadCounter = colorsCount++;
     public static final int key_topics_unreadCounterMuted = colorsCount++;
 
+    public static final int key_stories_circle1 = colorsCount++;
+    public static final int key_stories_circle2 = colorsCount++;
+    public static final int key_stories_circle_dialog1 = colorsCount++;
+    public static final int key_stories_circle_dialog2 = colorsCount++;
+    public static final int key_stories_circle_closeFriends1 = colorsCount++;
+    public static final int key_stories_circle_closeFriends2 = colorsCount++;
+
     public static final String key_drawable_botInline = "drawableBotInline";
     public static final String key_drawable_botLink = "drawableBotLink";
     public static final String key_drawable_botWebView = "drawableBotWebView";
@@ -4406,6 +4413,13 @@ public class Theme {
         themeAccentExclusionKeys.add(key_premiumStartSmallStarsColor);
         themeAccentExclusionKeys.add(key_premiumStartGradient1);
         themeAccentExclusionKeys.add(key_premiumStartGradient2);
+        themeAccentExclusionKeys.add(key_stories_circle1);
+        themeAccentExclusionKeys.add(key_stories_circle2);
+        themeAccentExclusionKeys.add(key_stories_circle_dialog1);
+        themeAccentExclusionKeys.add(key_stories_circle_dialog2);
+        themeAccentExclusionKeys.add(key_stories_circle_closeFriends1);
+        themeAccentExclusionKeys.add(key_stories_circle_closeFriends2);
+
 
         themes = new ArrayList<>();
         otherThemes = new ArrayList<>();
@@ -7773,11 +7787,17 @@ public class Theme {
                                 options.inSampleSize *= 2;
                             } while (options.inSampleSize < scale);
                         }
+                        options.inPreferredConfig = Bitmap.Config.ALPHA_8;
                         options.inJustDecodeBounds = false;
                         Bitmap wallpaper = BitmapFactory.decodeFile(wallpaperPath, options);
                         if (wallpaper != null) {
                             if (color2 != 0 && accent != null) {
                                 MotionBackgroundDrawable wallpaperDrawable = new MotionBackgroundDrawable(backColor, color1, color2, color3, true);
+                                if (bitmap != null && bitmap.getConfig() != Bitmap.Config.ALPHA_8) {
+                                    Bitmap toRecycle = bitmap;
+                                    bitmap = bitmap.copy(Bitmap.Config.ALPHA_8, false);
+                                    toRecycle.recycle();
+                                }
                                 wallpaperDrawable.setPatternBitmap((int) (accent.patternIntensity * 100), wallpaper);
                                 wallpaperDrawable.setBounds(0, 0, bitmap.getWidth(), bitmap.getHeight());
                                 wallpaperDrawable.draw(canvas);
@@ -8578,12 +8598,10 @@ public class Theme {
             calllog_msgCallUpGreenDrawable = resources.getDrawable(R.drawable.ic_call_made_green_18dp).mutate();
             calllog_msgCallDownRedDrawable = resources.getDrawable(R.drawable.ic_call_received_green_18dp).mutate();
             calllog_msgCallDownGreenDrawable = resources.getDrawable(R.drawable.ic_call_received_green_18dp).mutate();
-            chat_msgAvatarLiveLocationDrawable = resources.getDrawable(R.drawable.livepin).mutate();
 
             chat_inlineResultFile = resources.getDrawable(R.drawable.bot_file);
             chat_inlineResultAudio = resources.getDrawable(R.drawable.bot_music);
             chat_inlineResultLocation = resources.getDrawable(R.drawable.bot_location);
-            chat_redLocationIcon = resources.getDrawable(R.drawable.map_pin).mutate();
 
             chat_botLinkDrawable = resources.getDrawable(R.drawable.bot_link);
             chat_botInlineDrawable = resources.getDrawable(R.drawable.bot_lines);
@@ -8657,29 +8675,7 @@ public class Theme {
             chat_composeShadowDrawable = context.getResources().getDrawable(R.drawable.compose_panel_shadow).mutate();
             chat_composeShadowRoundDrawable = context.getResources().getDrawable(R.drawable.sheet_shadow_round).mutate();
 
-            try {
-                int bitmapSize = AndroidUtilities.roundMessageSize + AndroidUtilities.dp(6);
-                Bitmap bitmap = Bitmap.createBitmap(bitmapSize, bitmapSize, Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(bitmap);
-                Paint eraserPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                eraserPaint.setColor(0);
-                eraserPaint.setStyle(Paint.Style.FILL);
-                eraserPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-
-                Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                paint.setShadowLayer(AndroidUtilities.dp(4), 0, 0, 0x5f000000);
-                for (int a = 0; a < 2; a++) {
-                    canvas.drawCircle(bitmapSize / 2, bitmapSize / 2, AndroidUtilities.roundMessageSize / 2 - AndroidUtilities.dp(1), a == 0 ? paint : eraserPaint);
-                }
-                try {
-                    canvas.setBitmap(null);
-                } catch (Exception ignore) {
-
-                }
-                chat_roundVideoShadow = new BitmapDrawable(bitmap);
-            } catch (Throwable ignore) {
-
-            }
+            chat_roundVideoShadow = new RoundVideoShadow();
 
             defaultChatDrawables.clear();
             defaultChatDrawableColorKeys.clear();
@@ -9699,11 +9695,24 @@ public class Theme {
             int gradientToColor2 = currentColors.get(key_chat_wallpaper_gradient_to2);
             int gradientToColor1 = currentColors.get(key_chat_wallpaper_gradient_to1);
 
+            boolean bitmapCreated = false;
             if (wallpaperFile != null && wallpaperFile.exists()) {
+                bitmapCreated = true;
                 try {
                     if (backgroundColor != 0 && gradientToColor1 != 0 && gradientToColor2 != 0) {
                         MotionBackgroundDrawable motionBackgroundDrawable = new MotionBackgroundDrawable(backgroundColor, gradientToColor1, gradientToColor2, gradientToColor3, false);
-                        motionBackgroundDrawable.setPatternBitmap(intensity, BitmapFactory.decodeFile(wallpaperFile.getAbsolutePath()));
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inPreferredConfig = Bitmap.Config.ALPHA_8;
+                        Bitmap patternBitmap = BitmapFactory.decodeFile(wallpaperFile.getAbsolutePath(), options);
+                        if (patternBitmap != null && patternBitmap.getConfig() != Bitmap.Config.ALPHA_8) {
+                            Bitmap toRecycle = patternBitmap;
+                            patternBitmap = patternBitmap.copy(Bitmap.Config.ALPHA_8, false);
+                            toRecycle.recycle();
+                        }
+                        if (patternBitmap == null) {
+                            bitmapCreated = false;
+                        }
+                        motionBackgroundDrawable.setPatternBitmap(intensity, patternBitmap);
                         motionBackgroundDrawable.setPatternColorFilter(motionBackgroundDrawable.getPatternColor());
                         settings.wallpaper = motionBackgroundDrawable;
                     } else {
@@ -9714,7 +9723,11 @@ public class Theme {
                     settings.isCustomTheme = true;
                 } catch (Throwable e) {
                     FileLog.e(e);
+                    bitmapCreated = false;
                 }
+            }
+            if (bitmapCreated) {
+
             } else if (backgroundColor != 0) {
                 int rotation = currentColors.get(key_chat_wallpaper_gradient_rotation, -1);
                 if (rotation == -1) {
@@ -9731,7 +9744,9 @@ public class Theme {
                             FileOutputStream stream = null;
                             try {
                                 stream = new FileOutputStream(wallpaperFile);
-                                patternBitmap.compress(Bitmap.CompressFormat.PNG, 90, stream);
+                                Bitmap bitmap = patternBitmap.copy(Bitmap.Config.ARGB_8888, true);
+                                bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream);
+                                bitmap.recycle();
                                 stream.close();
                             } catch (Exception e) {
                                 FileLog.e(e);
@@ -10045,6 +10060,7 @@ public class Theme {
                         photoH /= 2;
                     }
                 }
+                opts.inPreferredConfig = Bitmap.Config.ALPHA_8;
                 opts.inJustDecodeBounds = false;
                 opts.inSampleSize = scaleFactor;
                 Bitmap bitmap = BitmapFactory.decodeStream(stream, null, opts);
@@ -10055,6 +10071,11 @@ public class Theme {
                         intensity = (int) (accent.patternIntensity * 100);
                     } else {
                         intensity = 100;
+                    }
+                    if (bitmap != null && bitmap.getConfig() != Bitmap.Config.ALPHA_8) {
+                        Bitmap toRecycle = bitmap;
+                        bitmap = bitmap.copy(Bitmap.Config.ALPHA_8, false);
+                        toRecycle.recycle();
                     }
                     motionBackgroundDrawable.setPatternBitmap(intensity, bitmap);
                     motionBackgroundDrawable.setPatternColorFilter(motionBackgroundDrawable.getPatternColor());

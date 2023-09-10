@@ -4,12 +4,12 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '6.5.0.202303070854-r'
+        classpath group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '6.6.0.202305301015-r'
     }
 }
 
 plugins {
-    id 'com.android.application' version '8.1.0' apply false
+    id 'com.android.application' version '8.1.1' apply false
     id 'com.google.gms.google-services' version '4.3.10' apply false
     id 'org.lsposed.lsparanoid' version '0.5.2'
 }
@@ -19,8 +19,8 @@ subprojects {
         if (plugins.hasPlugin("com.android.library") ||
                 plugins.hasPlugin("com.android.application")) {
             android {
-                compileSdkVersion 33
-                buildToolsVersion "33.0.2"
+                compileSdkVersion 34
+                buildToolsVersion "34.0.0"
                 ndkVersion "23.2.8568313"
 
                 lint {
@@ -56,6 +56,6 @@ subprojects {
     }
 }
 
-task clean(type: Delete) {
+tasks.register('clean', Delete) {
     delete rootProject.buildDir
 }

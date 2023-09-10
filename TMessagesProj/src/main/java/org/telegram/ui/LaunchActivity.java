@@ -85,6 +85,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.common.api.Status;
+import com.google.common.primitives.Longs;
 import com.google.firebase.appindexing.Action;
 import com.google.firebase.appindexing.FirebaseUserActions;
 import com.google.firebase.appindexing.builders.AssistActionBuilder;
@@ -213,9 +214,9 @@ import java.util.regex.Pattern;
 import tw.nekomimi.nekogram.forward.ForwardContext;
 import tw.nekomimi.nekogram.NekoConfig;
 import tw.nekomimi.nekogram.helpers.ApkInstaller;
-import tw.nekomimi.nekogram.helpers.MessageHelper;
 import tw.nekomimi.nekogram.helpers.MonetHelper;
 import tw.nekomimi.nekogram.helpers.SettingsHelper;
+import tw.nekomimi.nekogram.helpers.UserHelper;
 import tw.nekomimi.nekogram.helpers.remote.EmojiHelper;
 import tw.nekomimi.nekogram.helpers.remote.UpdateHelper;
 import tw.nekomimi.nekogram.settings.NekoDonateActivity;
@@ -1663,7 +1664,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         boolean pushOpened = false;
         long push_user_id = 0;
         long push_chat_id = 0;
-        long profile_user_id = 0;
+        long profile_dialog_id = 0;
         long[] push_story_dids = null;
         int push_story_id = 0;
         int push_topic_id = 0;
@@ -2502,7 +2503,17 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                         String userID = data.getQueryParameter("id");
                                         if (userID != null) {
                                             try {
-                                                profile_user_id = Long.parseLong(userID);
+                                                profile_dialog_id = Long.parseLong(userID);
+                                            } catch (NumberFormatException ignore) {
+                                            }
+                                        }
+                                    } else if (url.startsWith("tg:chat") || url.startsWith("tg://chat")) {
+                                        url = url.replace("tg:chat", "tg://telegram.org").replace("tg://chat", "tg://telegram.org");
+                                        data = Uri.parse(url);
+                                        String chatID = data.getQueryParameter("id");
+                                        if (chatID != null) {
+                                            try {
+                                                profile_dialog_id = -Long.parseLong(chatID);
                                             } catch (NumberFormatException ignore) {
                                             }
                                         }
@@ -2867,11 +2878,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     pushOpened = true;
                     drawerLayoutContainer.closeDrawer();
                 }
-            } else if (profile_user_id != 0) {
-                Bundle args = new Bundle();
-                args.putLong("user_id", profile_user_id);
-                ProfileActivity fragment = new ProfileActivity(args);
-                MessageHelper.getInstance(currentAccount).openById(profile_user_id, this, () -> {
+            } else if (profile_dialog_id != 0) {
+                UserHelper.getInstance(currentAccount).openByDialogId(profile_dialog_id, this, (fragment) -> {
                     AndroidUtilities.runOnUIThread(() -> presentFragment(fragment, false, false));
                     if (AndroidUtilities.isTablet()) {
                         actionBarLayout.showLastFragment();
@@ -3786,7 +3794,11 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                                             TLRPC.TL_attachMenuBotsBot attachMenuBotsBot = (TLRPC.TL_attachMenuBotsBot) response1;
                                             MessagesController.getInstance(intentAccount).putUsers(attachMenuBotsBot.users, false);
                                             TLRPC.TL_attachMenuBot attachMenuBot = attachMenuBotsBot.bot;
-                                            BaseFragment lastFragment = mainFragmentsStack.get(mainFragmentsStack.size() - 1);
+                                            BaseFragment lastFragment_ = mainFragmentsStack.get(mainFragmentsStack.size() - 1);
+                                            if (AndroidUtilities.isTablet() && !(lastFragment_ instanceof ChatActivity) && !rightFragmentsStack.isEmpty()) {
+                                                lastFragment_ = rightFragmentsStack.get(rightFragmentsStack.size() - 1);
+                                            }
+                                            final BaseFragment lastFragment = lastFragment_;
 
                                             List<String> chooserTargets = new ArrayList<>();
                                             if (!TextUtils.isEmpty(attachMenuBotChoose)) {
@@ -7182,6 +7194,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
         int keyCode = event.getKeyCode();
         if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP || event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
             BaseFragment baseFragment = getLastFragment();
+            if (baseFragment != null && baseFragment.overlayStoryViewer != null && baseFragment.overlayStoryViewer.isShown()) {
+                baseFragment.overlayStoryViewer.dispatchKeyEvent(event);
+                return true;
+            }
             if (baseFragment != null && baseFragment.storyViewer != null && baseFragment.storyViewer.isShown()) {
                 baseFragment.storyViewer.dispatchKeyEvent(event);
                 return true;
@@ -7358,7 +7374,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             }
         } else {
             boolean allow = true; // TODO: Make it a flag inside fragment itself, maybe BaseFragment#isDrawerOpenAllowed()?
-            if (fragment instanceof LoginActivity || fragment instanceof IntroActivity || fragment instanceof ProxyListActivity) {
+            if (fragment instanceof LoginActivity || fragment instanceof IntroActivity || fragment instanceof ProxyListActivity || fragment instanceof ProxySettingsActivity) {
                 if (mainFragmentsStack.size() == 0 || mainFragmentsStack.get(0) instanceof IntroActivity || mainFragmentsStack.get(0) instanceof LoginActivity) {
                     allow = false;
                 }
@@ -7375,7 +7391,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     @Override
     public boolean needAddFragmentToStack(BaseFragment fragment, INavigationLayout layout) {
         if (AndroidUtilities.isTablet()) {
-            drawerLayoutContainer.setAllowOpenDrawer(!(fragment instanceof LoginActivity || fragment instanceof IntroActivity || fragment instanceof CountrySelectActivity || fragment instanceof ProxyListActivity) && layersActionBarLayout.getView().getVisibility() != View.VISIBLE, true);
+            drawerLayoutContainer.setAllowOpenDrawer(!(fragment instanceof LoginActivity || fragment instanceof IntroActivity || fragment instanceof CountrySelectActivity || fragment instanceof ProxyListActivity || fragment instanceof ProxySettingsActivity) && layersActionBarLayout.getView().getVisibility() != View.VISIBLE, true);
             if (fragment instanceof DialogsActivity) {
                 DialogsActivity dialogsActivity = (DialogsActivity) fragment;
                 if (dialogsActivity.isMainDialogList() && layout != actionBarLayout) {
@@ -7441,7 +7457,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             }
         } else {
             boolean allow = true;
-            if (fragment instanceof LoginActivity || fragment instanceof IntroActivity || fragment instanceof ProxyListActivity) {
+            if (fragment instanceof LoginActivity || fragment instanceof IntroActivity || fragment instanceof ProxyListActivity || fragment instanceof ProxySettingsActivity) {
                 if (mainFragmentsStack.size() == 0 || mainFragmentsStack.get(0) instanceof IntroActivity) {
                     allow = false;
                 }
@@ -7531,14 +7547,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     public void requestCustomNavigationBar() {
         if (customNavigationBar == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             customNavigationBar = drawerLayoutContainer.createNavigationBar();
-            if (customNavigationBar != null) {
-                FrameLayout decorView = (FrameLayout) getWindow().getDecorView();
-                decorView.addView(customNavigationBar);
-                if (customNavigationBar.getLayoutParams().height != AndroidUtilities.navigationBarHeight || ((FrameLayout.LayoutParams)customNavigationBar.getLayoutParams()).topMargin != customNavigationBar.getHeight()) {
-                    customNavigationBar.getLayoutParams().height = AndroidUtilities.navigationBarHeight;
-                    ((FrameLayout.LayoutParams)customNavigationBar.getLayoutParams()).topMargin = drawerLayoutContainer.getMeasuredHeight();
-                    customNavigationBar.requestLayout();
-                }
+            FrameLayout decorView = (FrameLayout) getWindow().getDecorView();
+            decorView.addView(customNavigationBar);
+        }
+        if (customNavigationBar != null) {
+            if (customNavigationBar.getLayoutParams().height != AndroidUtilities.navigationBarHeight || ((FrameLayout.LayoutParams)customNavigationBar.getLayoutParams()).topMargin != customNavigationBar.getHeight()) {
+                customNavigationBar.getLayoutParams().height = AndroidUtilities.navigationBarHeight;
+                ((FrameLayout.LayoutParams)customNavigationBar.getLayoutParams()).topMargin = drawerLayoutContainer.getMeasuredHeight();
+                customNavigationBar.requestLayout();
             }
         }
     }
@@ -7586,59 +7602,71 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 break;
             }
         }
-        NotificationsController.getInstance(currentAccount).processIgnoreStories();
-        List<BaseFragment> fragments = actionBarLayout.getFragmentStack();
-        DialogsActivity dialogsActivity = null;
-        for (int i = fragments.size() - 1; i >= 0; --i) {
-            BaseFragment fragment = fragments.get(i);
-            if (fragment instanceof DialogsActivity && (!((DialogsActivity) fragment).isArchive() || onlyArchived) && ((DialogsActivity) fragment).getType() == DialogsActivity.DIALOGS_TYPE_DEFAULT) {
-                dialogsActivity = (DialogsActivity) fragment;
-                break;
-            } else {
-                fragment.removeSelfFromStack(true);
-            }
-        }
-        if (dialogsActivity != null) {
-            if (drawerLayoutContainer != null) {
-                drawerLayoutContainer.closeDrawer(true);
-            }
-            if (onlyArchived) {
-                MessagesController.getInstance(dialogsActivity.getCurrentAccount()).getStoriesController().loadHiddenStories();
-            } else {
-                MessagesController.getInstance(dialogsActivity.getCurrentAccount()).getStoriesController().loadStories();
-            }
-            if (dialogsActivity.rightSlidingDialogContainer.hasFragment()) {
-                dialogsActivity.rightSlidingDialogContainer.finishPreview();
-            }
-            if (onlyArchived && !dialogsActivity.isArchive()) {
-                Bundle args = new Bundle();
-                args.putInt("folderId", 1);
-                presentFragment(dialogsActivity = new DialogsActivity(args));
-            }
-            final DialogsActivity dialogsActivity1 = dialogsActivity;
-            dialogsActivity1.scrollToTop(false, false);
-            AndroidUtilities.runOnUIThread(() -> {
-                dialogsActivity1.scrollToTop(true, true);
-            }, 500);
-            return;
-        }
+//        NotificationsController.getInstance(currentAccount).processIgnoreStories();
+//        List<BaseFragment> fragments = actionBarLayout.getFragmentStack();
+//        DialogsActivity dialogsActivity = null;
+//        for (int i = fragments.size() - 1; i >= 0; --i) {
+//            BaseFragment fragment = fragments.get(i);
+//            if (fragment instanceof DialogsActivity && (!((DialogsActivity) fragment).isArchive() || onlyArchived) && ((DialogsActivity) fragment).getType() == DialogsActivity.DIALOGS_TYPE_DEFAULT) {
+//                dialogsActivity = (DialogsActivity) fragment;
+//                break;
+//            } else {
+//                fragment.removeSelfFromStack(true);
+//            }
+//        }
+//        if (dialogsActivity != null) {
+//            if (drawerLayoutContainer != null) {
+//                drawerLayoutContainer.closeDrawer(true);
+//            }
+//            if (onlyArchived) {
+//                MessagesController.getInstance(dialogsActivity.getCurrentAccount()).getStoriesController().loadHiddenStories();
+//            } else {
+//                MessagesController.getInstance(dialogsActivity.getCurrentAccount()).getStoriesController().loadStories();
+//            }
+//            if (dialogsActivity.rightSlidingDialogContainer.hasFragment()) {
+//                dialogsActivity.rightSlidingDialogContainer.finishPreview();
+//            }
+//            if (onlyArchived && !dialogsActivity.isArchive()) {
+//                Bundle args = new Bundle();
+//                args.putInt("folderId", 1);
+//                presentFragment(dialogsActivity = new DialogsActivity(args));
+//            }
+//            final DialogsActivity dialogsActivity1 = dialogsActivity;
+//            dialogsActivity1.scrollToTop(false, false);
+//            AndroidUtilities.runOnUIThread(() -> {
+//                dialogsActivity1.scrollToTop(true, true);
+//            }, 500);
+//            return;
+//        }
 
         BaseFragment lastFragment = getLastFragment();
         if (lastFragment == null) {
             return;
         }
         StoriesController storiesController = MessagesController.getInstance(currentAccount).getStoriesController();
-        ArrayList<TLRPC.TL_userStories> stories = new ArrayList<>(storiesController.getDialogListStories());
-        stories.addAll(storiesController.getHiddenList());
+        ArrayList<TLRPC.TL_userStories> stories = new ArrayList<>(onlyArchived ? storiesController.getHiddenList() : storiesController.getDialogListStories());
         ArrayList<Long> peerIds = new ArrayList<>();
         ArrayList<Long> toLoadPeerIds = new ArrayList<>();
-        if (requestWhenNeeded) {
+        final long[] finalDialogIds;
+        if (!onlyArchived) {
+            ArrayList<Long> dids = new ArrayList<>();
             for (int i = 0; i < dialogIds.length; ++i) {
-                toLoadPeerIds.add(dialogIds[i]);
+                TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(dialogIds[i]);
+                if (user == null || !user.stories_hidden) {
+                    dids.add(dialogIds[i]);
+                }
+            }
+            finalDialogIds = Longs.toArray(dids);
+        } else {
+            finalDialogIds = dialogIds;
+        }
+        if (requestWhenNeeded) {
+            for (int i = 0; i < finalDialogIds.length; ++i) {
+                toLoadPeerIds.add(finalDialogIds[i]);
             }
         } else {
-            for (int i = 0; i < dialogIds.length; ++i) {
-                peerIds.add(dialogIds[i]);
+            for (int i = 0; i < finalDialogIds.length; ++i) {
+                peerIds.add(finalDialogIds[i]);
             }
         }
         if (!toLoadPeerIds.isEmpty() && requestWhenNeeded) {
@@ -7648,7 +7676,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 loaded[0]--;
                 if (loaded[0] == 0) {
                     NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.storiesUpdated);
-                    openStories(dialogIds, false);
+                    openStories(finalDialogIds, false);
                 }
             };
             for (int i = 0; i < toLoadPeerIds.size(); ++i) {

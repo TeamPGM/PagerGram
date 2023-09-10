@@ -6,6 +6,8 @@
     <string name="HidePhone">Скрыть мой номер телефона</string>
     <string name="DeleteAllFromSelf">Удалить мои сообщения</string>
     <string name="DeleteAllFromSelfAlert">Внимание! Это **удалит все ваши сообщения** в этом чате для **всех**.</string>
+    <string name="DeleteAllFromSelfAlertBefore">Осторожно! Это **удалит все ваши сообщения от вас до %s** в этом чате для **всех** участников.</string>
+    <string name="DeleteAllFromSelfBefore">До...</string>
     <string name="BotLogin">Вход по токену</string>
     <string name="BotLoginMessage">Введите токен бота, полученный от **@BotFather**.</string>
     <string name="InvalidAccessToken">Токен недействителен</string>
@@ -17,7 +19,7 @@
     <string name="LastFirst">Фамилия Имя</string>
     <string name="NoQuoteForward">Переслать без автора</string>
     <string name="NoCaptionForward">Переслать без текста</string>
-    <string name="NoQuoteForwardShort">Без текста</string>
+    <string name="NoQuoteForwardShort">Без автора</string>
     <string name="NoCaptionForwardShort">Без подписи</string>
     <string name="Repeat">Повторить</string>
     <string name="AddToSavedMessages">Сохранить сообщение</string>
@@ -35,7 +37,7 @@
     <string name="DeleteDownloadedFile">Удалить загруженный файл</string>
     <string name="TestBackendOn">Эта учетная запись будет подключаться к тестовому серверу.</string>
     <string name="TestBackendOff">Эта учетная запись будет подключаться к основному серверу.</string>
-    <string name="ViewHistory">История сообщений</string>
+    <string name="ViewHistory">Посмотреть историю</string>
     <string name="Nya">Мяу!</string>
     <string name="SensitiveDisableFiltering">Показывать деликатный контент</string>
     <string name="SensitiveAbout">Отображать деликатный контент в публичных каналах на всех ваших устройствах.</string>
@@ -48,7 +50,7 @@
     <string name="MessageDetails">Подробности</string>
     <string name="DeleteAccount">Удалить Telegram аккаунт</string>
     <string name="TranslateFailed">Ошибка сервера переводчика</string>
-    <string name="TranslationProvider">Переводчик</string>
+    <string name="TranslationProvider">Поставщик переводов</string>
     <string name="ProviderGoogleTranslate">Google Переводчик</string>
     <string name="TranslateApiUnsupported">Выбранный переводчик не поддерживает ваш язык.</string>
     <string name="ProviderLingocloud">Lingocloud</string>
@@ -188,7 +190,8 @@
     <string name="AppLinkNotVerifiedTitle">Ссылки приложения не подтверждены</string>
     <string name="AutoTranslate">Автоперевод</string>
     <string name="AutoTranslateAbout">Автоматически переводить сообщения с иностранного языка.</string>
-    <string name="CreateMono">Создать моноширинный</string>
+    <string name="MonoCode">Код</string>
+    <string name="CreateMono">Создать код</string>
     <string name="CreateMonoLanguage">Язык программирования (необязательно)</string>
     <string name="DoubleTapAction">Действие при двойном нажатии</string>
     <string name="BlockedUserIgnored">заблокирован</string>
@@ -285,6 +288,13 @@
     <string name="SendLargePhotos">Отправка фотографии большого размера</string>
     <string name="SendLargePhotosAbout">Увеличить размер сторон на сжатых изображениях до 2560px.</string>
     <string name="ExportAsJson">Скопировать как JSON</string>
+    <string name="HideStories">Скрыть истории</string>
+    <string name="QuickForward">Использовать меню быстрой пересылки</string>
+    <string name="DidNotGetTheCodeBlameDurov">Если вы не получили код или вы не входили в Telegram аккаунт на другом устройстве, воспользуйтесь официальным приложением Telegram, чтобы получить код.\n\nTelegram **отключил возможность авторизации через СМС** для альтернативных приложений. Согласно новым правилам, пользователи альтернативных клиентов больше не могут получить СМС-код для авторизации. Теперь для получения кода требуется использовать официальное приложение Telegram.\n\nЕсли у вас возникла проблема со входом в аккаунт, пожалуйста, обратитесь в службу поддержки Telegram.</string>
+    <string name="NavigationAnimation">Анимация навигации</string>
+    <string name="NavigationAnimationBezier">Стандартная</string>
+    <string name="NavigationAnimationSpring">Обычная</string>
+    <string name="NavigationAnimationCrossfading">Эффект затухания</string>
     <!-- Accessibility -->
     <string name="AccessibilitySettings">Специальные возможности</string>
     <string name="AccSeekbarHeading">Настройки ползунков</string>

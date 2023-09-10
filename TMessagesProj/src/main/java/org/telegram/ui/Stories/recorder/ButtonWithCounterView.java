@@ -8,6 +8,7 @@ import android.animation.StateListAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ShapeDrawable;
@@ -19,6 +20,7 @@ import android.view.animation.OvershootInterpolator;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.ColorUtils;
 
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.LocaleController;
@@ -53,7 +55,11 @@ public class ButtonWithCounterView extends FrameLayout {
         ScaleStateListAnimator.apply(this, .02f, 1.2f);
 
         rippleView = new View(context);
-        rippleView.setBackground(Theme.createRadSelectorDrawable(Theme.getColor(Theme.key_listSelector, resourcesProvider), 8, 8));
+        if (filled) {
+            rippleView.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Theme.getColor(Theme.key_featuredStickers_addButton), ColorUtils.setAlphaComponent(Theme.getColor(Theme.key_windowBackgroundWhite), 120)));
+        } else {
+            rippleView.setBackground(Theme.createSimpleSelectorRoundRectDrawable(AndroidUtilities.dp(6), Color.TRANSPARENT, ColorUtils.setAlphaComponent(Theme.getColor(Theme.key_featuredStickers_addButton), 120)));
+        }
         addView(rippleView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
 
         if (filled) {
@@ -85,7 +91,7 @@ public class ButtonWithCounterView extends FrameLayout {
         setWillNotDraw(false);
     }
 
-    public void setText(String newText, boolean animated) {
+    public void setText(CharSequence newText, boolean animated) {
         if (animated) {
             text.cancelAnimation();
         }
@@ -215,6 +221,8 @@ public class ButtonWithCounterView extends FrameLayout {
 
     private CircularProgressDrawable loadingDrawable;
 
+    private int globalAlpha = 255;
+
     @Override
     protected void onDraw(Canvas canvas) {
         rippleView.draw(canvas);
@@ -248,7 +256,7 @@ public class ButtonWithCounterView extends FrameLayout {
                     (int) ((getMeasuredWidth() - width + getWidth()) / 2f + textWidth),
                     (int) ((getMeasuredHeight() + text.getHeight()) / 2f - dp(1))
             );
-            text.setAlpha((int) (0xFF * (1f - loadingT) * AndroidUtilities.lerp(.5f, 1f, enabledT)));
+            text.setAlpha((int) (globalAlpha * (1f - loadingT) * AndroidUtilities.lerp(.5f, 1f, enabledT)));
             text.setBounds(AndroidUtilities.rectTmp2);
             text.draw(canvas);
 
@@ -264,11 +272,11 @@ public class ButtonWithCounterView extends FrameLayout {
                 canvas.save();
                 canvas.scale(countScale, countScale, AndroidUtilities.rectTmp2.centerX(), AndroidUtilities.rectTmp2.centerY());
             }
-            paint.setAlpha((int) (0xFF * (1f - loadingT) * countAlpha * countAlpha * AndroidUtilities.lerp(.5f, 1f, enabledT)));
+            paint.setAlpha((int) (globalAlpha * (1f - loadingT) * countAlpha * countAlpha * AndroidUtilities.lerp(.5f, 1f, enabledT)));
             canvas.drawRoundRect(AndroidUtilities.rectTmp, dp(10), dp(10), paint);
 
             AndroidUtilities.rectTmp2.offset(-dp(.3f), -dp(.4f));
-            countText.setAlpha((int) (0xFF * (1f - loadingT) * countAlpha));
+            countText.setAlpha((int) (globalAlpha * (1f - loadingT) * countAlpha));
             countText.setBounds(AndroidUtilities.rectTmp2);
             countText.draw(canvas);
             if (countScale != 1) {
@@ -285,5 +293,13 @@ public class ButtonWithCounterView extends FrameLayout {
         super.onInitializeAccessibilityNodeInfo(info);
         info.setClassName("android.widget.Button");
 //        info.setContentDescription(text.getText() + (lastCount > 0 ? ", " + LocaleController.formatPluralString("Chats", lastCount) : ""));
+    }
+
+    public void setTextAlpha(float v) {
+        text.setAlpha((int) (v * 255));
+    }
+
+    public void setGlobalAlpha(float v) {
+        globalAlpha = ((int) (v * 255));
     }
 }

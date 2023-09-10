@@ -6,6 +6,8 @@
     <string name="HidePhone">إخفاء رقم هاتفي</string>
     <string name="DeleteAllFromSelf">حذف الرسائل الخاصة بي</string>
     <string name="DeleteAllFromSelfAlert">تحذير! سيؤدي هذا إلى **حذفَ جميع الرسائل منكَ** في هذه المحادثة لـ **جميع** المشاركين.</string>
+    <string name="DeleteAllFromSelfAlertBefore">تحذير! سيؤدي هذا إلى حذف **جميع الرسائل منك قبل %s** في هذه المحادثة لـ **جميع المشاركين**.</string>
+    <string name="DeleteAllFromSelfBefore">قبل...</string>
     <string name="BotLogin">تسجيل الدخول کبوت</string>
     <string name="BotLoginMessage">أدخل رمز البوت الذي تم الحصول عليه من **@BotFather**.</string>
     <string name="InvalidAccessToken">مفتاح التوكن غيرُ صالح</string>
@@ -189,7 +191,8 @@
     <string name="AppLinkNotVerifiedTitle">لم يتم التحقق من روابط التطبيق</string>
     <string name="AutoTranslate">ترجمة تلقائية</string>
     <string name="AutoTranslateAbout">يمكنك ترجمة الرسائل المكتوبة بلغة أخرى تلقائيًا.</string>
-    <string name="CreateMono">إنشاء مساحة أحادية</string>
+    <string name="MonoCode">رمز</string>
+    <string name="CreateMono">إنشاء رمز</string>
     <string name="CreateMonoLanguage">لغة الكود (اختياري)</string>
     <string name="DoubleTapAction">انقر نقرًا مزدوجًا</string>
     <string name="BlockedUserIgnored">تجاهل المستخدم المحظور</string>
@@ -286,6 +289,13 @@
     <string name="SendLargePhotos">إرسال صور كبيرة</string>
     <string name="SendLargePhotosAbout">زيادة الحد الجانبي على الصور المضغوطة إلى 2560 بكسل.</string>
     <string name="ExportAsJson">نسخ كملف جيسون</string>
+    <string name="HideStories">إخفاء القصص</string>
+    <string name="QuickForward">إستخدام قائمة التقدم السريع</string>
+    <string name="DidNotGetTheCodeBlameDurov">إذا لم تحصل على الرمز على جهاز آخر أو لم تقم بتسجيل الدخول إلى Telegram على جهاز آخر، فيرجى استخدام تطبيق Telegram الرسمي لتلقي الرمز.\n\n**لقد عطل Telegram القدرة على تسجيل الدخول باستخدام الرسائل القصيرة ** على تطبيقات الطرف الثالث. لا يتمكن المستخدمون الذين يقومون بتسجيل الدخول إلى تطبيقات الطرف الثالث من تلقي رموز تسجيل الدخول إلا عبر Telegram.\n\nلا يمكننا مساعدتك في هذا الأمر، إذا كانت لديك أية مشكلات في تسجيل الدخول، فيرجى الاتصال بدعم Telegram.</string>
+    <string name="NavigationAnimation">تأثير حركة التنقل</string>
+    <string name="NavigationAnimationBezier">كلاسيكي</string>
+    <string name="NavigationAnimationSpring">طبيعي</string>
+    <string name="NavigationAnimationCrossfading">تأثير التداخل</string>
     <!-- Accessibility -->
     <string name="AccessibilitySettings">إمكانية الوصول</string>
 </resources>

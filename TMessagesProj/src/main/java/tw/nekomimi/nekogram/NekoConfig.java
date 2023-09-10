@@ -8,6 +8,8 @@ import android.text.TextUtils;
 
 import com.google.gson.JsonParser;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildConfig;
@@ -15,6 +17,7 @@ import org.telegram.messenger.FileLog;
 import org.telegram.messenger.NotificationsService;
 import org.telegram.messenger.R;
 import org.telegram.messenger.SharedConfig;
+import org.telegram.messenger.Utilities;
 import org.telegram.tgnet.TLRPC;
 import org.telegram.ui.ActionBar.Theme;
 
@@ -136,7 +139,11 @@ public class NekoConfig {
     public static boolean markdownParseLinks = true;
     public static boolean uploadSpeedBoost = false;
     public static boolean sendLargePhotos = true;
-    public static boolean useLNavigation = false;
+    public static boolean hideStories = false;
+    public static boolean quickForward = false;
+
+    public static boolean springAnimation = false;
+    public static boolean actionbarCrossfade = false;
 
     public static final String WS_ADDRESS = "ws.neko";
     private static int socksPort = -1;
@@ -152,6 +159,7 @@ public class NekoConfig {
     public static boolean residentNotification = false;
 
     public static boolean shouldNOTTrustMe = false;
+    public static boolean blockSponsoredMessage = false;
 
     public static ArrayList<TLRPC.Update> pendingChangelog;
 
@@ -292,6 +300,7 @@ public class NekoConfig {
             confirmAVMessage = preferences.getBoolean("confirmAVMessage", false);
             askBeforeCall = preferences.getBoolean("askBeforeCall", true);
             shouldNOTTrustMe = preferences.getBoolean("shouldNOTTrustMe", false);
+            blockSponsoredMessage = preferences.getBoolean("blockSponsoredMessage", false);
             disableNumberRounding = preferences.getBoolean("disableNumberRounding", false);
             disableAppBarShadow = preferences.getBoolean("disableAppBarShadow", false);
             mediaPreview = preferences.getBoolean("mediaPreview", true);
@@ -331,7 +340,10 @@ public class NekoConfig {
             lastForwardOption = preferences.getInt("lastForwardOption", ForwardItem.ID_FORWARD);
             showQrCode = preferences.getBoolean("showQrCode", true);
             wsDomain = preferences.getString("wsDomain", "");
-            useLNavigation = preferences.getBoolean("useLNavigation", false);
+            hideStories = preferences.getBoolean("hideStories", false);
+            quickForward = preferences.getBoolean("quickForward", false);
+            springAnimation = preferences.getBoolean("springAnimation", false);
+            actionbarCrossfade = preferences.getBoolean("actionbarCrossfade", false);
             preferences.registerOnSharedPreferenceChangeListener(listener);
 
             for (int a = 1; a <= 5; a++) {
@@ -413,6 +425,22 @@ public class NekoConfig {
         editor.apply();
     }
 
+    public static void toggleQuickForward() {
+        quickForward = !quickForward;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("quickForward", quickForward);
+        editor.apply();
+    }
+
+    public static void toggleHideStories() {
+        hideStories = !hideStories;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("hideStories", hideStories);
+        editor.apply();
+    }
+
     public static void toggleShowQrCode() {
         showQrCode = !showQrCode;
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
@@ -421,11 +449,19 @@ public class NekoConfig {
         editor.apply();
     }
 
-    public static void toggleUseLNavigation() {
-        useLNavigation = !useLNavigation;
+    public static void setSpringAnimation(boolean spring) {
+        springAnimation = spring;
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean("useLNavigation", useLNavigation);
+        editor.putBoolean("springAnimation", spring);
+        editor.apply();
+    }
+
+    public static void toggleActionbarCrossfade() {
+        actionbarCrossfade = !actionbarCrossfade;
+        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("actionbarCrossfade", actionbarCrossfade);
         editor.apply();
     }
 
@@ -776,14 +812,6 @@ public class NekoConfig {
         editor.apply();
     }
 
-    public static void toggleShouldNOTTrustMe() {
-        shouldNOTTrustMe = !shouldNOTTrustMe;
-        SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean("shouldNOTTrustMe", shouldNOTTrustMe);
-        editor.apply();
-    }
-
     public static void toggleDisableNumberRounding() {
         disableNumberRounding = !disableNumberRounding;
         SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
@@ -942,6 +970,34 @@ public class NekoConfig {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("maxRecentStickers", maxRecentStickers);
         editor.apply();
+    }
+
+    public static void processBotEvents(String eventType, String eventData, Utilities.Callback<JSONObject> setConfig) throws JSONException {
+        if (eventType.equals("neko_get_config")) {
+            setConfig.run(new JSONObject()
+                    .put("hidden_features", showHiddenFeature)
+                    .put("trust", !shouldNOTTrustMe)
+                    .put("ad_blocker", blockSponsoredMessage));
+        } else if (eventType.equals("neko_set_config")) {
+            JSONObject jsonObject = new JSONObject(eventData);
+            SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("nekoconfig", Activity.MODE_PRIVATE);
+            SharedPreferences.Editor editor = preferences.edit();
+            switch (jsonObject.getString("key")) {
+                case "hidden_features":
+                    showHiddenFeature = jsonObject.getBoolean("value");
+                    editor.putBoolean("showHiddenFeature5", showHiddenFeature);
+                    break;
+                case "trust":
+                    shouldNOTTrustMe = !jsonObject.getBoolean("value");
+                    editor.putBoolean("shouldNOTTrustMe", shouldNOTTrustMe);
+                    break;
+                case "ad_blocker":
+                    blockSponsoredMessage = jsonObject.getBoolean("value");
+                    editor.putBoolean("blockSponsoredMessage", blockSponsoredMessage);
+                    break;
+            }
+            editor.apply();
+        }
     }
 
     public static int getNotificationColor() {
